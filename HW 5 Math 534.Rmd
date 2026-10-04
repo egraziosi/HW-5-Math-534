@@ -1,0 +1,42 @@
+---
+title: "Untitled"
+author: "Eric Graziosi"
+date: "2026-09-26"
+output:
+  github_document:
+    toc: true
+---
+
+
+```{r}
+library(tidyverse)
+organs_original<- read_csv("C:/Users/ericg/Downloads/global-organ-donation_2018.csv", 
+                            col_types = list(`Utilized DBD` = col_number(),
+                                             `DD Lung Tx` = col_number(),
+                                             `Total Utilized DD` = col_number(),
+                                             `LD Lung Tx` = col_number())) 
+```
+
+```{r}
+organs_original |>
+  group_by(REPORTYEAR) |>
+  summarise(
+    total_rows = n(),
+    non_missing = sum(!is.na(`TOTAL Actual DD`))
+  ) |>
+  ggplot() +
+  geom_col(aes(x = REPORTYEAR, y = total_rows)) +
+  geom_col(aes(x = REPORTYEAR, y = non_missing))
+```
+
+```{r}
+organs_original |>
+  group_by(REPORTYEAR) |>
+  summarise(
+    total_rows = n(),
+    missing = sum(is.na(`TOTAL Actual DD`)),
+    non_missing = sum(!is.na(`TOTAL Actual DD`))
+  )
+```
+
+From 2000-2014 there are consistently 194 rows per year, but the number of missing values in TOTAL_ACTUAL_DD values increase over time. After 2014, the number of rows decrease, which can indicate that the data collection changed, making the data less complete. TOTAL_ACTUAL_DD is almost completely missing after 2014, with only 7 non-missing values in 2015 and none in 2016 or 2017. Therefore, the lack of completeness after 2014 is due to both fewer records being available and the absence of TOTAL_ACTUAL_DD. 
