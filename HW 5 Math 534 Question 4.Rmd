@@ -1,0 +1,142 @@
+---
+title: "Untitled"
+author: "Eric Graziosi"
+date: "2026-09-26"
+output:
+  github_document:
+    toc: true
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+
+debt <- read_excel("C:/Users/ericg/Downloads/debt.xls")
+growth <- read_excel("C:/Users/ericg/Downloads/growth.xlsx")
+
+```
+
+Step 1: Learn about the data collection and background
+
+The debt dataset contains country-level debt as a percentage of GDP across years, while the growth dataset contains annual GDP growth for different countries.
+
+
+Step 2: Load the data into R
+```{r}
+debt
+growth
+```
+
+
+
+Step 3: Examine the data and create action items
+
+```{r}
+sum(duplicated(debt))
+sum(duplicated(growth))
+```
+
+```{r}
+names(debt)
+names(growth)
+```
+
+```{r}
+str(debt)
+str(growth)
+```
+
+```{r}
+colSums(is.na(debt))
+colSums(is.na(growth))
+```
+
+
+```{r}
+head(debt)
+head(growth)
+```
+
+We can see that there are some missing values and that we will have to clean this data. We can see the variable types, if htere are any duplicate rows and column names as well
+
+
+# Step 4: Clean the data
+
+```{r}
+clean_debt <- function(debt) {
+  
+  debt_clean <- debt |>
+    filter(`DEBT (% of GDP)` == "Australia") |>
+    select(`DEBT (% of GDP)`, `1960`:`1969`) |>
+    pivot_longer(
+      cols = `1960`:`1969`,
+      names_to = "Year",
+      values_to = "debt_pct_gdp"
+    ) |>
+    mutate(
+      Country = `DEBT (% of GDP)`,
+      Year = as.numeric(Year),
+      debt_pct_gdp = na_if(debt_pct_gdp, "no data"),
+      debt_pct_gdp = as.numeric(debt_pct_gdp)
+    ) |>
+    select(Country, Year, debt_pct_gdp)
+  
+  return(debt_clean)
+}
+
+
+clean_growth <- function(growth) {
+  
+  growth_clean <- growth |>
+    filter(`Country Name` == "Australia") |>
+    select(`Country Name`, `1960.0`:`1969.0`) |>
+    pivot_longer(
+      cols = `1960.0`:`1969.0`,
+      names_to = "Year",
+      values_to = "growth_pct_gdp"
+    ) |>
+    mutate(
+      Country = `Country Name`,
+      Year = as.numeric(Year),
+      growth_pct_gdp = as.numeric(growth_pct_gdp)
+    ) |>
+    select(Country, Year, growth_pct_gdp)
+  
+  return(growth_clean)
+}
+
+
+debt_clean <- clean_debt(debt)
+growth_clean <- clean_growth(growth)
+
+debt_clean
+growth_clean
+```
+
+
+
+
+Pre-processing
+
+
+```{r}
+pre_process <- function(debt_clean, growth_clean) {
+  
+  combined <- debt_clean |>
+    inner_join(
+      growth_clean,
+      by = c("Country", "Year")
+    ) |>
+    select(Country, Year, debt_pct_gdp, growth_pct_gdp)
+  
+  return(combined)
+}
+
+
+combined <- pre_process(debt_clean, growth_clean)
+
+combined
+```
+
+
+
